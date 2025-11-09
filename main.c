@@ -15,14 +15,15 @@ int main()
 
     int *v2 = mymemory_alloc(memory, sizeof(int)*16);
 
-    // free(v);
-    mymemory_free(memory, v);
+    mymemory_display(memory);
+    // // free(v);
+    // mymemory_free(memory, v);
 
     char *str = mymemory_alloc(memory, sizeof(char)*16);
     sprintf(str, "ola mundo");
 
-    // libera o pool de memoria
-    mymemory_cleanup(memory);
+    // // libera o pool de memoria
+    // mymemory_cleanup(memory);
 
     return 0;
 }

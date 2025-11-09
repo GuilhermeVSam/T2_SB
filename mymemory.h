@@ -6,6 +6,7 @@
 typedef struct allocation {
     void *start;
     size_t size;
+    int free;
     struct allocation *next;
 } allocation_t;
 
