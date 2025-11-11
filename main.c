@@ -22,6 +22,8 @@ int main()
     char *str = mymemory_alloc(memory, sizeof(char)*16);
     sprintf(str, "ola mundo");
 
+    printf("Conteúdo: %s\n", str);
+
     // // libera o pool de memoria
     // mymemory_cleanup(memory);
 
