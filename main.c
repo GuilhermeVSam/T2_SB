@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
-// Gerado por IA, só pra testes
-
-static size_t sizes[] = {10,25,50,100,250,500,1000,13,37,77};
+int help();
+int menu();
 
 int main(void) {
+    //menu();
     size_t pool_size = 1024;
 
     mymemory_t *m = mymemory_init(pool_size);
@@ -26,16 +27,6 @@ int main(void) {
     mymemory_display(m);
     mymemory_stats(m);
 
-    // /* libera meia-dúzia aleatoriamente */
-    // for (int i = 0; i < alloc_count/2; ++i) {
-    //     int idx = rand() % alloc_count;
-    //     void *p = allocated[idx];
-    //     if (p) {
-    //         mymemory_free(m, p);
-    //         allocated[idx] = NULL;
-    //     }
-    // }
-
     mymemory_free(m, b);
     mymemory_free(m, d);
 
@@ -51,5 +42,55 @@ int main(void) {
     mymemory_stats(m);
 
     mymemory_cleanup(m);
+    //menu();
     return 0;
+}
+
+int help(){
+    printf("=============SISTEMA DE ALOCAÇÃO DE MEMÓRIA=============\n");
+    printf("malloc <tamanho> - Aloca um bloco com tamanho <tamanho>\n");
+    printf("free <id> - Libera o bloco com <id> especificado\n");
+    printf("display - Exibe todos os blocos do sistema\n");
+    printf("stats - Exibe o status do sistema\n");
+    printf("cleanup - Limpa a memória do sistema\n");
+    return 0;
+}
+
+int menu(){
+    mymemory_t *m = NULL;
+
+    while (1) {
+        char input[100];
+
+        printf("> ");
+        if (!fgets(input, sizeof(input), stdin))
+            break;
+
+        input[strcspn(input, "\n")] = '\0';
+
+        char command[20];
+        int value;
+
+        if (sscanf(input, "%19s %d", command, &value) == 2) {
+            if(strcmp(command, "init") == 0){
+                m = mymemory_init(value);
+            } else if(strcmp(command, "alloc") == 0){
+                mymemory_alloc(m, value);
+            } else if(strcmp(command, "free") == 0){
+                //mymemory_free(m, value);
+            }
+        } else if (sscanf(input, "%19s", command) == 1) {
+            if (strcmp(command, "help") == 0) {
+                help();
+            } else if(strcmp(command, "display") == 0) {
+                mymemory_display(m);
+            } else if(strcmp(command, "stats") == 0) {
+                mymemory_stats(m);
+            } else if(strcmp(command, "cleanup") == 0){
+                mymemory_cleanup(m);
+            } else {
+                printf("Unknown command: %s\n", command);
+            }
+        }
+    }
 }
