@@ -20,23 +20,19 @@ int main(void) {
     void *a = mymemory_alloc(m, 100);
     void *b = mymemory_alloc(m, 200);
     void *c = mymemory_alloc(m, 50);
-    void *d = mymemory_alloc(m, 300);
-    void *e = mymemory_alloc(m, 150);
 
     printf("Depois de 5 alocações:\n");
     mymemory_display(m);
     mymemory_stats(m);
 
     mymemory_free(m, b);
-    mymemory_free(m, d);
+    mymemory_free(m, c);
 
     printf("\nApós liberar os blocos:\n");
     mymemory_display(m);
     mymemory_stats(m);
 
-    mymemory_alloc(m, 77);
-    mymemory_alloc(m, 45);
-    mymemory_alloc(m, 12);
+    mymemory_alloc(m, 55);
     
     mymemory_display(m);
     mymemory_stats(m);

@@ -24,14 +24,24 @@ void* mymemory_alloc(mymemory_t *memory, size_t size) {
 
     allocation_t* current = memory->head;	// Para fazer a leitura dos blocos já alocados, aponta para o HEAD
     allocation_t* prev = NULL;				// Ponteiro para o bloco de memória anterior
-    
+    allocation_t* bestFit = NULL;
     while (current != NULL) {
         if (current->free && current->size >= size) {	// Se o bloco atual estiver vazio e tiver capacidade para ser utilizado, retorna
-            current->free = 0;
-            return current->start;
+            if(bestFit == NULL){
+                bestFit = current;
+            } else {
+                if(bestFit->size > current->size){
+                    bestFit = current;
+                }
+            }
         }
         prev = current;
         current = current->next;
+    }
+
+    if(bestFit != NULL){
+        bestFit->free = 0;
+        return bestFit;
     }
 
     size_t offset = 0;
