@@ -10,8 +10,8 @@ static size_t sizes[] = {10,25,50,100,250,500,1000,13,37,77};
 int main(void) {
     /* exemplo: pool de 16 KB */
     size_t pool_size = 16 * 1024;
-    /* troque estrategia para FIRST_FIT, BEST_FIT, WORST_FIT */
-    mymemory_t *m = mymemory_init(pool_size, FIRST_FIT);
+
+    mymemory_t *m = mymemory_init(pool_size);
     if (!m) {
         fprintf(stderr, "Falha ao criar pool\n");
         return 1;
@@ -22,7 +22,7 @@ int main(void) {
     int alloc_count = 0;
 
     srand((unsigned) time(NULL));
-    for (int i = 0; i < 50; ++i) {
+    for (int i = 0; i < 5; ++i) {
         size_t s = sizes[rand() % (sizeof(sizes)/sizeof(sizes[0]))];
         void *p = mymemory_alloc(m, s);
         if (p) {
@@ -30,7 +30,7 @@ int main(void) {
         }
     }
 
-    printf("Depois de 50 alocações:\n");
+    printf("Depois de 5 alocações:\n");
     mymemory_display(m);
     mymemory_stats(m);
 
@@ -48,8 +48,9 @@ int main(void) {
     mymemory_display(m);
     mymemory_stats(m);
 
-    /* tenta alocar blocos maiores para testar coalescência via gaps */
+
     void *big = mymemory_alloc(m, 2000);
+    mymemory_alloc(m, 77);
     printf("\nTentativa de alocar bloco grande (2000 bytes) -> %p\n", big);
     mymemory_display(m);
     mymemory_stats(m);

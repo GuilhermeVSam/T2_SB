@@ -63,25 +63,21 @@ void* mymemory_alloc(mymemory_t *memory, size_t size) {
 }
 
 void mymemory_free(mymemory_t *memory, void *ptr) {
-	if (memory == NULL || ptr == NULL)	//	Null é ignorado
-		return;
+    if (memory == NULL || ptr == NULL) {
+        return;
+    }
 
-	allocation_t *atual = memory->head;
-	allocation_t *anterior = NULL;
+    allocation_t *current = memory->head;
+    allocation_t *prev = NULL;
 
-	while (atual != NULL) {
-		if (atual->start == ptr) {
-			if (anterior == NULL) {
-				memory->head = atual->next;
-			} else {
-				anterior->next = atual->next;
-			}
-			free(atual);
-			return;
-		}
-		anterior = atual;
-		atual = atual->next;
-	}
+    while (current != NULL) {
+        if (current->start == ptr) {
+            current->free = 1;
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
 }
 
 void mymemory_display(mymemory_t *memory){
@@ -110,54 +106,91 @@ void mymemory_stats(mymemory_t *memory) {
 
     size_t total_alocados = 0;
     size_t total_bytes_alocados = 0;
+    size_t total_bytes_livres = 0;
     size_t maior_livre = 0;
     size_t fragmentos_livres = 0;
 
     allocation_t *atual = memory->head;
 
+    // Primeira passagem: contar blocos alocados e bytes livres nos blocos marcados como free
     while (atual != NULL) {
-        total_alocados++;
-        total_bytes_alocados += atual->size;
+        if (!atual->free) {  // Bloco está alocado
+            total_alocados++;
+            total_bytes_alocados += atual->size;
+        } else {  // Bloco está livre
+            total_bytes_livres += atual->size;
+        }
         atual = atual->next;
     }
 
+    // Segunda parte: calcular fragmentação considerando blocos livres
     if (memory->head == NULL) {
+        // Pool vazio - toda memória está livre
         maior_livre = memory->total_size;
-        fragmentos_livres = (maior_livre > 0);
+        fragmentos_livres = 1;
+        total_bytes_livres = memory->total_size;
     } else {
+        // Para calcular fragmentos contíguos, precisamos verificar a memória entre blocos
         allocation_t *p = memory->head;
         size_t inicio_pool = (size_t)memory->pool;
         size_t fim_pool = inicio_pool + memory->total_size;
-        size_t inicio_livre = inicio_pool;
-
-        while (p != NULL) {
-            size_t inicio_aloc = (size_t)p->start;
-            if (inicio_aloc > inicio_livre) {
-                size_t tamanho_livre = inicio_aloc - inicio_livre;
-                fragmentos_livres++;
-                if (tamanho_livre > maior_livre)
-                    maior_livre = tamanho_livre;
-            }
-            inicio_livre = inicio_aloc + p->size;
-            p = p->next;
+        
+        // Verificar espaço antes do primeiro bloco
+        size_t primeiro_inicio = (size_t)memory->head->start;
+        if (primeiro_inicio > inicio_pool) {
+            size_t tamanho_livre = primeiro_inicio - inicio_pool;
+            fragmentos_livres++;
+            if (tamanho_livre > maior_livre) maior_livre = tamanho_livre;
+            total_bytes_livres += tamanho_livre;
         }
 
-        if (inicio_livre < fim_pool) {
-            size_t tamanho_livre = fim_pool - inicio_livre;
+        // Verificar espaços entre blocos
+        allocation_t *current = memory->head;
+        while (current != NULL && current->next != NULL) {
+            size_t fim_current = (size_t)current->start + current->size;
+            size_t inicio_next = (size_t)current->next->start;
+            
+            if (fim_current < inicio_next) {
+                size_t tamanho_livre = inicio_next - fim_current;
+                fragmentos_livres++;
+                if (tamanho_livre > maior_livre) maior_livre = tamanho_livre;
+                total_bytes_livres += tamanho_livre;
+            }
+            current = current->next;
+        }
+
+        // Verificar espaço após o último bloco
+        allocation_t *last = memory->head;
+        while (last->next != NULL) last = last->next;
+        size_t fim_last = (size_t)last->start + last->size;
+        if (fim_last < fim_pool) {
+            size_t tamanho_livre = fim_pool - fim_last;
             fragmentos_livres++;
-            if (tamanho_livre > maior_livre)
-                maior_livre = tamanho_livre;
+            if (tamanho_livre > maior_livre) maior_livre = tamanho_livre;
+            total_bytes_livres += tamanho_livre;
+        }
+
+        // Agora adicionar os blocos que estão marcados como livres
+        allocation_t *bloco = memory->head;
+        while (bloco != NULL) {
+            if (bloco->free) {
+                // Cada bloco livre é um fragmento adicional
+                fragmentos_livres++;
+                if (bloco->size > maior_livre) maior_livre = bloco->size;
+            }
+            bloco = bloco->next;
         }
     }
 
-    size_t total_livre = memory->total_size - total_bytes_alocados;
-
     printf("Estatísticas de Memória:\n");
-    printf("  Total de alocações: %zu\n", total_alocados);
+    printf("  Total de blocos alocados: %zu\n", total_alocados);
     printf("  Memória total alocada: %zu bytes\n", total_bytes_alocados);
-    printf("  Memória total livre: %zu bytes\n", total_livre);
+    printf("  Memória total livre: %zu bytes\n", total_bytes_livres);
     printf("  Maior bloco contíguo livre: %zu bytes\n", maior_livre);
     printf("  Número de fragmentos livres: %zu\n", fragmentos_livres);
+    printf("  Eficiência: %.2f%%\n", 
+           (memory->total_size > 0) ? 
+           ((float)total_bytes_alocados / memory->total_size * 100) : 0.0f);
 }
 
 void mymemory_cleanup(mymemory_t *memory) {
@@ -172,5 +205,7 @@ void mymemory_cleanup(mymemory_t *memory) {
 	}
 	free(memory->pool);
 	free(memory);
+
+    atual = NULL;
 }
 

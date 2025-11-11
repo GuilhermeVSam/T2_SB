@@ -1,31 +1,55 @@
-#include <stdio.h>
 #include "mymemory.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-int main()
-{
-    // aloca pool memoria
-    mymemory_t *memory = mymemory_init(1000);
+// Gerado por IA, só pra testes
 
-    //int v[32];
-    // int *v = malloc(sizeof(int)*32);
-    int *v = mymemory_alloc(memory, sizeof(int)*32);
-    for (int i = 0; i < 32; i++)
-        v[i] = i+1;
+static size_t sizes[] = {10,25,50,100,250,500,1000,13,37,77};
 
+int main(void) {
+    size_t pool_size = 1024;
 
-    int *v2 = mymemory_alloc(memory, sizeof(int)*16);
+    mymemory_t *m = mymemory_init(pool_size);
+    if (!m) {
+        fprintf(stderr, "Falha ao criar pool\n");
+        return 1;
+    }
 
-    mymemory_display(memory);
-    // // free(v);
-    // mymemory_free(memory, v);
+    void *a = mymemory_alloc(m, 100);
+    void *b = mymemory_alloc(m, 200);
+    void *c = mymemory_alloc(m, 50);
+    void *d = mymemory_alloc(m, 300);
+    void *e = mymemory_alloc(m, 150);
 
-    char *str = mymemory_alloc(memory, sizeof(char)*16);
-    sprintf(str, "ola mundo");
+    printf("Depois de 5 alocações:\n");
+    mymemory_display(m);
+    mymemory_stats(m);
 
-    printf("Conteúdo: %s\n", str);
+    // /* libera meia-dúzia aleatoriamente */
+    // for (int i = 0; i < alloc_count/2; ++i) {
+    //     int idx = rand() % alloc_count;
+    //     void *p = allocated[idx];
+    //     if (p) {
+    //         mymemory_free(m, p);
+    //         allocated[idx] = NULL;
+    //     }
+    // }
 
-    // // libera o pool de memoria
-    // mymemory_cleanup(memory);
+    mymemory_free(m, b);
+    mymemory_free(m, d);
 
+    printf("\nApós liberar os blocos:\n");
+    mymemory_display(m);
+    mymemory_stats(m);
+
+    mymemory_alloc(m, 77);
+    mymemory_alloc(m, 45);
+    mymemory_alloc(m, 12);
+    
+    mymemory_display(m);
+    mymemory_stats(m);
+
+    mymemory_cleanup(m);
     return 0;
 }
