@@ -97,7 +97,7 @@ void mymemory_display(mymemory_t *memory){
 		printf("============================================\n");
 		printf("ID Bloco: %d\n", id++);
 		printf("Início do Bloco: %p\n", (char*)current->start);
-		printf("Tamanho do Bloco: %d\n", current->size);
+		printf("Tamanho do Bloco: %ld\n", current->size);
 		printf("Bloco Vazio: %s\n", current->free ? "True" : "False");
 		printf("Próximo Bloco: %p\n", (char*)current->next);
 		current = current->next;
@@ -175,7 +175,6 @@ void mymemory_stats(mymemory_t *memory) {
         size_t fim_last = (size_t)last->start + last->size;
         if (fim_last < fim_pool) {
             size_t tamanho_livre = fim_pool - fim_last;
-            fragmentos_livres++;
             if (tamanho_livre > maior_livre) maior_livre = tamanho_livre;
             total_bytes_livres += tamanho_livre;
         }
